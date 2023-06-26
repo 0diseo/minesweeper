@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     member do
       put 'flag_cell'
       put 'undo_flag_cell'
+      put 'select_cell'
     end
   end
 

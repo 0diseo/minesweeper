@@ -20,7 +20,7 @@ module MinesweeperService
     player_board =  Array.new(params[:rows] || DEFAULT_SIZE).map{Array.new(params[:columns] || DEFAULT_SIZE, '?')}
     mining_board(board, params[:mines])
     add_numbers(board)
-    mine_board.create(status: :active, board: board, player_board: player_board)
+    mine_board.create(status: :active, board: board, player_board: player_board, mines: params[:mines])
   end
 
   def self.mining_board(board, mines)
@@ -31,33 +31,58 @@ module MinesweeperService
   end
 
   def self.add_numbers(board)
-    (0..(board.size - 1)).each { |x|
-      (0..(board.size - 1)).each { |y|
-        count_near_mines(board, x, y) if board[x][y] != 'mine'
+    (0..(board.size - 1)).each { |y|
+      (0..(board.first.size - 1)).each { |x|
+        count_near_mines(board, x, y) if board[y][x] != 'mine'
       }
     }
   end
 
   def self.count_near_mines(board, x, y)
     mines = 0
-    mines += 1 if(x != 0 && board[x-1][y] == 'mine') #left
-    mines += 1 if(x != 0 && y != 0 && board[x-1][y-1] == 'mine') #left, top corner
-    mines += 1 if(y != 0 && board[x][y-1] == 'mine') #top
-    mines += 1 if(x != (board.size - 1) && y != 0 && board[x+1][y-1] == 'mine') #top, right corner
-    mines += 1 if(x != (board.size - 1) && board[x+1][y] == 'mine') #right
-    mines += 1 if(x != (board.size - 1) && y != (board.first.size - 1) && board[x+1][y+1] == 'mine') #right, down corner
-    mines += 1 if(y != (board.first.size - 1) && board[x][y+1] == 'mine') #down
-    mines += 1 if(x != 0 && y != (board.first.size - 1) && board[x-1][y+1] == 'mine') #down , left corner
-    board[x][y] = mines
+    mines += 1 if(x != 0 && board[y][x-1] == 'mine') #left
+    mines += 1 if(x != 0 && y != 0 && board[y-1][x-1] == 'mine') #left, top corner
+    mines += 1 if(y != 0 && board[y-1][x] == 'mine') #top
+    mines += 1 if(x != (board.first.size - 1) && y != 0 && board[y-1][x+1] == 'mine') #top, right corner
+    mines += 1 if(x != (board.first.size - 1) && board[y][x+1] == 'mine') #right
+    mines += 1 if(x != (board.first.size - 1) && y != (board.size - 1) && board[y+1][x+1] == 'mine') #right, down corner
+    mines += 1 if(y != (board.size - 1) && board[y+1][x] == 'mine') #down
+    mines += 1 if(x != 0 && y != (board.size - 1) && board[y+1][x-1] == 'mine') #down , left corner
+    board[y][x] = mines
   end
 
   def self.flag_cell(board, x, y)
-    board.player_board[x][y] = 'flag'
+    board.player_board[y][x] = 'flag'
     board.save
   end
 
   def self.undo_flag_cell(board, x, y)
-    board.player_board[x][y] = '?'
+    board.player_board[y][x] = '?'
+    board.save
+  end
+
+  def self.select_cell(board, x, y)
+    board.player_board[y][x] =  board.board[y][x]
+
+    if board.board[y][x]  == '0'
+      select_cell(board, x-1, y) if(x != 0 && board.player_board[y][x-1] == '?') #left
+      select_cell(board, x-1, y-1) if(x != 0 && y != 0 && board.player_board[y-1][x-1] == '?') #left, top corner
+      select_cell(board, x, y-1) if(y != 0 && board.player_board[y-1][x] == '?') #top
+      select_cell(board, x+1, y-1) if(x != (board.player_board.first.size - 1) && y != 0 && board.player_board[y-1][x+1] == '?') #top, right corner
+      select_cell(board, x+1, y) if(x != (board.player_board.first.size - 1) && board.player_board[y][x+1] == '?') #right
+      select_cell(board, x+1, y+1) if(x != (board.player_board.first.size - 1) && y != (board.player_board.size - 1) && board.player_board[y+1][x+1] == '?') #right, down corner
+      select_cell(board, x, y+1) if(y != (board.player_board.size - 1) && board.player_board[y+1][x] == '?') #down
+      select_cell(board, x-1, y+1) if(x != 0 && y != (board.player_board.size - 1) && board.player_board[y+1][x-1] == '?') #down , left corner
+    end
+
+    if board.player_board[y][x] == 'mine'
+      board.status = 'game over'
+    end
+
+    if board.player_board.map{|row| row.count{|cell| cell == 'flag' || cell == '?' }}.sum == board.mines
+      board.status = 'win'
+    end
+
     board.save
   end
 end
