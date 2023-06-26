@@ -11,6 +11,6 @@ class MineBoardAdapter
   end
 
   def find(id)
-    store.find(id)
+    store.find_by(id: id)
   end
 end

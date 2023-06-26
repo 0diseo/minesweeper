@@ -50,4 +50,14 @@ module MinesweeperService
     mines += 1 if(x != 0 && y != (board.first.size - 1) && board[x-1][y+1] == 'mine') #down , left corner
     board[x][y] = mines
   end
+
+  def self.flag_cell(board, x, y)
+    board.player_board[x][y] = 'flag'
+    board.save
+  end
+
+  def self.undo_flag_cell(board, x, y)
+    board.player_board[x][y] = '?'
+    board.save
+  end
 end
