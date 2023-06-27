@@ -309,10 +309,10 @@ the test cases where no completed, there is not test case for service and adapte
 **path:** spec/resquest
 
 ## heroku
-**url:** 
+**url:**  https://guarded-bastion-29917-3d58d2835acd.herokuapp.com/
 
 ## git
-**url:**
+**url:** https://github.com/0diseo/minesweeper
 
 ## swager
 ther is a half implementation of swager, is not working, is the first time I try to implemented and I failed in short time
