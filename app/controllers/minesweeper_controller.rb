@@ -7,7 +7,7 @@ class MinesweeperController < ApplicationController
   def create
     @board = MinesweeperService.create_board(minesweeper_params)
     if @board.valid?
-      render json: { board: @board.player_board, id: @board.id }
+      render json: { board: @board.player_board, id: @board.id }, status: 201
     else
       render json: @board.errors, status: 422
     end
@@ -18,27 +18,27 @@ class MinesweeperController < ApplicationController
   end
 
   def flag_cell
-    MinesweeperService.flag_cell(@board, params[:row], params[:column] )
+    MinesweeperService.flag_cell(@board, params[:column].to_i, params[:row].to_i )
     render json: { board: @board.player_board, id: @board.id }
   end
 
   def undo_flag_cell
-    MinesweeperService.undo_flag_cell(@board, params[:row], params[:column] ) if @board.player_board[params[:row]][params[:column]] == 'flag'
+    MinesweeperService.undo_flag_cell(@board, params[:column].to_i, params[:row].to_i ) if @board.player_board[params[:row].to_i][params[:column].to_i] == 'flag'
     render json: { board: @board.player_board, id: @board.id }
   end
 
   def select_cell
-    if @board.player_board[params[:column] ][params[:row]] == 'flag'
+    if @board.player_board[params[:column].to_i ][params[:row].to_i] == 'flag'
       render json: { board: @board.player_board, id: @board.id, status: @board.status }
     else
-      MinesweeperService.select_cell(@board, params[:row], params[:column] )
-      render json: { board: @board.player_board, id: @board.id, status: @board.status, full_board: @board.board}
+      MinesweeperService.select_cell(@board, params[:column].to_i, params[:row].to_i )
+      render json: { board: @board.player_board, id: @board.id, status: @board.status}
     end
   end
 
   private
   def minesweeper_params
-    params.require(:minesweeper_params).permit(:rows, :columns, :mines)
+    params.require(:minesweeper).permit(:rows, :columns, :mines)
   end
 
   def set_board
@@ -47,7 +47,8 @@ class MinesweeperController < ApplicationController
   end
 
   def validate_row_and_colum
-    render json: {error: "row or column is out of range"}, status: 422 unless( params[:column] < @board.player_board.size && params[:row] < @board.player_board.first.size )
+    validation = ( params[:row].to_i < @board.player_board.size && params[:row].to_i < @board.player_board.first.size ) && params[:column].to_i >= 0 && params[:row].to_i >= 0
+    render json: {error: "row or column is out of range"}, status: 422 unless validation
   end
 
   def game_over

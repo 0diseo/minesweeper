@@ -1,0 +1,87 @@
+---
+openapi: 3.0.1
+info:
+  title: API V1
+  version: v1
+paths:
+  "/minesweeper":
+    post:
+      summary: create minesweeper
+      tags:
+      - minesweeper
+      parameters:
+      - properties:
+          board:
+            type: array
+          id:
+            type: string
+        required:
+        - board
+        - id
+        schema:
+          type: object
+      responses:
+        '201':
+          description: minesweeper created
+        '422':
+          description: invalid request
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rows:
+                  type: integer
+                  minimum: 8
+                columns:
+                  type: integer
+                  minimum: 8
+                mines:
+                  type: integer
+              required:
+              - mines
+  "/minesweeper/{id}":
+    get:
+      summary: get minesweeper
+      tags:
+      - minesweeper
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+          required:
+          - id
+        required: true
+      responses:
+        '200':
+          description: show minesweeper
+  "/minesweeper/{id}/flag_cell":
+    put:
+      summary: put flag
+      tags:
+      - minesweeper flag
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: add flag to a cell
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: integer
+        required: true
+servers:
+- url: https://{defaultHost}
+  variables:
+    defaultHost:
+      default: www.example.com
